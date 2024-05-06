@@ -9,5 +9,11 @@
 
  contract Raffle {
 
-    
+    function enterRaffle() {
+
+    }
+
+    function pickRandomWinner() {
+        
+    }
  }
