@@ -18,11 +18,12 @@
         i_entranceFee = entranceFee;
     }
 
-    function enterRaffle() {
+    function enterRaffle() public payable {
 
         if (msg.value < i_entranceFee) { 
             revert Raffle__NotEnoughETHEntered(); 
         }
+        s_players.push(payable(msg.sender));
     }
 
     // function pickRandomWinner() {
