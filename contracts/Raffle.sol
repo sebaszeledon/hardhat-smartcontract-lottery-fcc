@@ -30,9 +30,9 @@
         emit RaffleEnter(msg.sender);
     }
 
-    // function pickRandomWinner() {
+    function pickRandomWinner() public {
 
-    // }
+    }
 
     function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
