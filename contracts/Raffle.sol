@@ -8,6 +8,8 @@
  pragma solidity 0.8.24;
 
 import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
+import "hardhat/console.sol";
 
 
  error Raffle__NotEnoughETHEntered();
