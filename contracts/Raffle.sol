@@ -7,6 +7,7 @@
  // SPDX-License-Identifier: MIT
  pragma solidity 0.8.24;
 
+import "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 import "hardhat/console.sol";
@@ -18,15 +19,20 @@ import "hardhat/console.sol";
     // State Variables
     uint256 private immutable i_entranceFee;
     address payable[] private s_players;
+    VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
+    bytes32 private immutable i_gasLane;
 
     // Events
     event RaffleEnter(address indexed player);
 
     constructor(
         uint256 entranceFee,
-        address vrfCoordinatorV2
+        address vrfCoordinatorV2,
+        bytes32 gasLane
     ) VRFConsumerBaseV2(vrfCoordinatorV2) {
         i_entranceFee = entranceFee;
+        i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
+        i_gasLane = gasLane;
     }
 
     function enterRaffle() public payable {
@@ -39,6 +45,13 @@ import "hardhat/console.sol";
     }
 
     function requestRandomWinner() external {
+        i_vrfCoordinator.requestRandomWords(
+            i_gasLane,
+            s_subscriptionId,
+            requestConfirmations,
+            callbackGasLimit,
+            numWords
+        );
 
     }
 
