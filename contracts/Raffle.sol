@@ -12,14 +12,17 @@ import "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 import "hardhat/console.sol";
 
-//14:34:47
-
-
-
  error Raffle__NotEnoughETHEntered();
  error Raffle__TransferFailed();
+ error Raffle__NotOpen();
 
- contract Raffle is VRFConsumerBaseV2 {
+ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
+    /** Type declarations */
+    enum RaffleState {
+        OPEN, 
+        CALCULATING
+    }
+
     // State Variables
     uint256 private immutable i_entranceFee;
     address payable[] private s_players;
@@ -32,6 +35,7 @@ import "hardhat/console.sol";
 
     // Lottery variables
     address private s_recentWinner;
+    RaffleState private s_raffleState;
 
     // Events
     event RaffleEnter(address indexed player);
@@ -50,6 +54,7 @@ import "hardhat/console.sol";
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        s_raffleState = RaffleState.OPEN;
     }
 
     function enterRaffle() public payable {
@@ -57,11 +62,30 @@ import "hardhat/console.sol";
         if (msg.value < i_entranceFee) { 
             revert Raffle__NotEnoughETHEntered(); 
         }
+        if (s_raffleState != RaffleState.OPEN){
+            revert Raffle__NotOpen();
+        }
         s_players.push(payable(msg.sender));
         emit RaffleEnter(msg.sender);
     }
+    /** 
+     * @dev This is the function that the Chainlink Keeper nodes call
+     * they look for the `upkeepNeeded` to return true.
+     * The following should be true in order to return true:
+     * 1. Our time interval should have passed.
+     * 2. The lottery should have at least 1 player, and have some ETH.
+     * 3. Our subscription is funded with LINK.
+     * 4. The lottery should be in an "open" state.
+    */
+
+    function checkUpkeep(
+        bytes calldata /* checkData */
+    ) external override {
+
+    }
 
     function requestRandomWinner() external {
+        s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
             i_subscriptionId,
@@ -77,6 +101,8 @@ import "hardhat/console.sol";
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
+        s_raffleState = RaffleState.OPEN;
+        s_players = new address payable[](0);
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
         // require(success)
         if(!success) {
