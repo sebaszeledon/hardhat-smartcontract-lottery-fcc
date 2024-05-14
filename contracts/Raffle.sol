@@ -88,7 +88,7 @@ import "hardhat/console.sol";
      * 1. Our time interval should have passed.
      * 2. The lottery should have at least 1 player, and have some ETH.
      * 3. Our subscription is funded with LINK.
-     * 4. The lottery should be in an "open" state.
+     * 4. The lottery should be in an "open" state. 14:56:47
     */
 
     function checkUpkeep(
