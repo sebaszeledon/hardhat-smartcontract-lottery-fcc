@@ -15,6 +15,14 @@ import "hardhat/console.sol";
  error Raffle__NotEnoughETHEntered();
  error Raffle__TransferFailed();
  error Raffle__NotOpen();
+ error Raffle_UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
+
+ /**
+ * @title A sample Raffle Contract
+ * @author Sebastián Zeledón
+ * @notice This contract is for creating a sample raffle contract
+ * @dev This implements the Chainlink VRF Version 2
+ */
 
  contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     /** Type declarations */
@@ -59,7 +67,7 @@ import "hardhat/console.sol";
         i_callbackGasLimit = callbackGasLimit;
         s_raffleState = RaffleState.OPEN;
         s_lastTimeStamp = block.timestamp;
-        i_interal = interval;
+        i_interval = interval;
     }
 
     function enterRaffle() public payable {
@@ -97,7 +105,15 @@ import "hardhat/console.sol";
         return (upkeepNeeded, "0x0");
     }
 
-    function performUpkeep() external override {
+    function performUpkeep(bytes calldata /* performData */) external override {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if(!upkeepNeeded) {
+            revert Raffle_UpkeepNotNeeded(
+                address(this).balance, 
+                s_players.length, 
+                uint256(s_raffleState)
+            );
+        }
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
@@ -116,6 +132,7 @@ import "hardhat/console.sol";
         s_recentWinner = recentWinner;
         s_raffleState = RaffleState.OPEN;
         s_players = new address payable[](0);
+        s_lastTimeStamp = block.timestamp;
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
         // require(success)
         if(!success) {
@@ -135,5 +152,25 @@ import "hardhat/console.sol";
 
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
+    }
+
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
+
+    function getNumWords() public pure returns (uint256) {
+        return NUM_WORDS;
+    }
+
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+
+    function getLastTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRequestConfirmations() public pure returns (uint256) {
+        return REQUEST_CONFIRMATIONS;
     }
  }
