@@ -15,7 +15,7 @@ module.exports = async ( { getNamedAccounts, deployments } ) => {
         subscriptionId = transactionReceipt.events[0].args.subId;
         // Fund the subscription
         // Our mock makes it so we don't actually have to worry about sending fund
-        await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, FUND_AMOUNT);
+        await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, FUND_AMOUNT); //15:10:45
     }
     const args = []
     const raffle = await deploy("Raffle", {
