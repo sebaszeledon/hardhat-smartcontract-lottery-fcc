@@ -53,21 +53,21 @@ import "hardhat/console.sol";
     event WinnerPicked(address indexed winner);
 
     constructor(
-        uint256 entranceFee,
         address vrfCoordinatorV2,
-        bytes32 gasLane,
         uint64 subscriptionId,
-        uint32 callbackGasLimit,
-        uint256 interval
+        bytes32 gasLane,
+        uint256 interval,
+        uint256 entranceFee,
+        uint32 callbackGasLimit
     ) VRFConsumerBaseV2(vrfCoordinatorV2) {
-        i_entranceFee = entranceFee;
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
         i_gasLane = gasLane;
+        i_interval = interval;
         i_subscriptionId = subscriptionId;
-        i_callbackGasLimit = callbackGasLimit;
+        i_entranceFee = entranceFee;
         s_raffleState = RaffleState.OPEN;
         s_lastTimeStamp = block.timestamp;
-        i_interval = interval;
+        i_callbackGasLimit = callbackGasLimit;  
     }
 
     function enterRaffle() public payable {
