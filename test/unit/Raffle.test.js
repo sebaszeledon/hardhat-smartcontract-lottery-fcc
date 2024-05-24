@@ -5,13 +5,16 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
 !developmentChains.includes(network.name) 
     ? describe.skip
     : describe("Raffle Unit Tests", async function () {
-        let raffle, raffleContract, vrfCoordinatorV2Mock, raffleEntranceFee, interval, player; // , deployer
+        let raffle, raffleContract, vrfCoordinatorV2Mock, raffleEntranceFee, interval, player, deployer;
 
         beforeEach(async function () {
-            const { deployer } = await getNamedAccounts();
+            //accounts = await ethers.getSigners(); // could also do with getNamedAccounts
+            deployer = (await getNamedAccounts()).deployer;
+            //player = accounts[1];
             await deployments.fixture(["all"]);
             raffle = await ethers.getContract("Raffle", deployer);
             vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock", deployer);
+            raffleEntranceFee = await raffle.getEntranceFee();
         });
 
         describe("constructor", async function(){
@@ -32,6 +35,11 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                     "Raffle__NotEnoughETHEntered"
                 );
             });
+            it("records player when they enter", async () => {
+                await raffle.enterRaffle({ value: raffleEntranceFee })
+                const contractPlayer = await raffle.getPlayer(0)
+                assert.equal(contractPlayer, deployer);
+            });
         });
 
-    });
+    }); //15:30:21
