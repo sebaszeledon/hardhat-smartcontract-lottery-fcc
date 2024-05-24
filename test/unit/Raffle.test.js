@@ -26,4 +26,12 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
             });
         });
 
+        describe("enterRaffle", async function() {
+            it("reverts when you dont pay enough", async function() {
+                await expect(raffle.enterRaffle()).to.be.revertedWith(
+                    "Raffle__NotEnoughETHEntered"
+                );
+            });
+        });
+
     });
