@@ -50,5 +50,12 @@ module.exports = {
         blockConfirmations: 2,
     },
   },
+  gasReporter: {
+    enabled: false,
+    currency: "USD",
+    outputFile: "gas-report.txt",
+    noColors: true,
+    // coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+},
 };
 
