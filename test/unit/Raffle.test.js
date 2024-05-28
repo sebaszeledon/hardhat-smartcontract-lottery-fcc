@@ -40,6 +40,12 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                 const contractPlayer = await raffle.getPlayer(0)
                 assert.equal(contractPlayer, deployer);
             });
+            it("emits event on enter", async () => {
+                expect(raffle.enterRaffle({ value: raffleEntranceFee })).to.emit( // emits RaffleEnter event if entered to index player(s) address
+                    raffle,
+                    "RaffleEnter"
+                )
+            });
         });
 
     }); //15:30:21
