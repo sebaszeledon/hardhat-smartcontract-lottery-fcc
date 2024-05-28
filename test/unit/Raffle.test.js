@@ -65,7 +65,15 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                 const { upkeepNeeded } = await raffle.checkUpkeep.staticCall("0x");// upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers)
                 assert(!upkeepNeeded);
             });
-            
+            it("returns false if raffle isn't open", async () => {
+                await raffle.enterRaffle({ value: raffleEntranceFee });
+                await network.provider.send("evm_increaseTime", [Number(interval) + 1]);
+                await network.provider.request({ method: "evm_mine", params: [] });
+                await raffle.performUpkeep("0x"); // changes the state to calculating
+                const raffleState = await raffle.getRaffleState(); // stores the new state
+                const { upkeepNeeded } = await raffle.checkUpkeep.staticCall("0x"); // upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers)
+                assert.equal(raffleState.toString() == "1", upkeepNeeded == false)
+            })
         });
 
     }); //15:30:21
