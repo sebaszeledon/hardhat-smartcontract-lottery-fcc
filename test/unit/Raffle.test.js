@@ -123,12 +123,12 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
             })
             it("can only be called after performupkeep", async () => {
                 await expect(
-                    vrfCoordinatorV2Mock.fulfillRandomWords(0, raffle.address) // reverts if not fulfilled
+                    vrfCoordinatorV2Mock.fulfillRandomWords(0, raffle.target) // reverts if not fulfilled
                 ).to.be.revertedWith("nonexistent request");
                 await expect(
-                    vrfCoordinatorV2Mock.fulfillRandomWords(1, raffle.address) // reverts if not fulfilled
+                    vrfCoordinatorV2Mock.fulfillRandomWords(1, raffle.target) // reverts if not fulfilled
                 ).to.be.revertedWith("nonexistent request");
             });
         });
 
-    }); //15:30:21
+    }); //15:52:11
