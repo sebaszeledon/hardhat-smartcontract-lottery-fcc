@@ -4,7 +4,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
 
 !developmentChains.includes(network.name) 
     ? describe.skip
-    : describe("Raffle Unit Tests", async function () {
+    : describe("Raffle Unit Tests", function () {
         let raffle, raffleContract, vrfCoordinatorV2Mock, raffleEntranceFee, interval, player, deployer;
 
         beforeEach(async function () {
@@ -18,7 +18,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
             interval = await raffle.getInterval();
         });
 
-        describe("constructor", async function(){
+        describe("constructor", function(){
             it("initializes the raffle correctly", async function() {
                 // Ideally, we'd separate these out so that only 1 assert per "it" block
                 // And ideally, we'd make this check everything
@@ -29,7 +29,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
             });
         });
 
-        describe("enterRaffle", async function() {
+        describe("enterRaffle", function() {
             it("reverts when you dont pay enough", async function() {
                 await expect(raffle.enterRaffle()).to.be.revertedWith(
                     "Raffle__NotEnoughETHEntered"
@@ -73,6 +73,20 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                 const raffleState = await raffle.getRaffleState(); // stores the new state
                 const { upkeepNeeded } = await raffle.checkUpkeep.staticCall("0x"); // upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers)
                 assert.equal(raffleState.toString() == "1", upkeepNeeded == false)
+            });
+            it("returns false if enough time hasn't passed", async () => {
+                await raffle.enterRaffle({ value: raffleEntranceFee });
+                await network.provider.send("evm_increaseTime", [Number(interval) - 5]); // use a higher number here if this test fails
+                await network.provider.request({ method: "evm_mine", params: [] });
+                const { upkeepNeeded } = await raffle.checkUpkeep.staticCall("0x"); // upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers)
+                assert(!upkeepNeeded);
+            })
+            it("returns true if enough time has passed, has players, eth, and is open", async () => {
+                await raffle.enterRaffle({ value: raffleEntranceFee });
+                await network.provider.send("evm_increaseTime", [Number(interval) + 1]);
+                await network.provider.request({ method: "evm_mine", params: [] });
+                const { upkeepNeeded } = await raffle.checkUpkeep.staticCall("0x");  // upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers)
+                assert(upkeepNeeded);
             })
         });
 
