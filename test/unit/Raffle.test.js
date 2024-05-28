@@ -47,16 +47,25 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                 )
             });
             it("doesn't allow entrance when raffle is calculating", async () => {
-                await raffle.enterRaffle({ value: raffleEntranceFee })
+                await raffle.enterRaffle({ value: raffleEntranceFee });
                 // for a documentation of the methods below, go here: https://hardhat.org/hardhat-network/reference
                 await network.provider.send("evm_increaseTime", [Number(interval) + 1]);
-                await network.provider.request({ method: "evm_mine", params: [] })
+                await network.provider.request({ method: "evm_mine", params: [] });
                 // we pretend to be a keeper for a second
-                await raffle.performUpkeep("0x") // changes the state to calculating for our comparison below
+                await raffle.performUpkeep("0x"); // changes the state to calculating for our comparison below
                 await expect(raffle.enterRaffle({ value: raffleEntranceFee })).to.be.revertedWith( // is reverted as raffle is calculating
                     "Raffle__NotOpen"
-                )
+                );
             })
+        });
+        describe("checkUpkeep", async function () {
+            it("returns false if people haven't sent any ETH", async () => {
+                await network.provider.send("evm_increaseTime", [Number(interval) + 1]);
+                await network.provider.request({ method: "evm_mine", params: [] });
+                const { upkeepNeeded } = await raffle.checkUpkeep.staticCall("0x");// upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers)
+                assert(!upkeepNeeded);
+            });
+            
         });
 
     }); //15:30:21
