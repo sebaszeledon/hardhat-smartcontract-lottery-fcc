@@ -8,9 +8,9 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
         let raffle, raffleContract, vrfCoordinatorV2Mock, raffleEntranceFee, interval, player, deployer;
 
         beforeEach(async function () {
-            //accounts = await ethers.getSigners(); // could also do with getNamedAccounts
+            accounts = await ethers.getSigners(); // could also do with getNamedAccounts
             deployer = (await getNamedAccounts()).deployer;
-            //player = accounts[1];
+            player = accounts[1];
             await deployments.fixture(["all"]);
             raffle = await ethers.getContract("Raffle", deployer);
             vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock", deployer);
@@ -135,8 +135,8 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                   const startingIndex = 2;
                   let startingBalance;
                   for (let i = startingIndex; i < startingIndex + additionalEntrances; i++) { // i = 2; i < 5; i=i+1
-                      raffle = raffleContract.connect(accounts[i]); // Returns a new instance of the Raffle contract connected to player
-                      await raffle.enterRaffle({ value: raffleEntranceFee });
+                    raffleContract = raffle.connect(accounts[i]); // Returns a new instance of the Raffle contract connected to player
+                    await raffleContract.enterRaffle({ value: raffleEntranceFee });
                   }
                   const startingTimeStamp = await raffle.getLastTimeStamp(); // stores starting timestamp (before we fire our event)
                   
@@ -150,7 +150,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                             // Now lets get the ending values...
                             const recentWinner = await raffle.getRecentWinner();
                             const raffleState = await raffle.getRaffleState();
-                            const winnerBalance = await accounts[2].getBalance();
+                            const winnerBalance = await accounts[2].provider.getBalance(accounts.address);
                             const endingTimeStamp = await raffle.getLastTimeStamp();
                             await expect(raffle.getPlayer(0)).to.be.reverted;
                             // Comparisons to check if our ending values are correct:
@@ -176,7 +176,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                     try {
                         const tx = await raffle.performUpkeep("0x");
                         const txReceipt = await tx.wait(1);
-                        startingBalance = await accounts[2].getBalance();
+                        startingBalance = await accounts[2].provider.getBalance(accounts.address);
                         await vrfCoordinatorV2Mock.fulfillRandomWords(
                             txReceipt.events[1].args.requestId,
                             raffle.address
@@ -187,4 +187,4 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                 });
             });
         });
-    }); //15:52:11
+    }); //16:05:35
