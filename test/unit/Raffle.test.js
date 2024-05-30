@@ -142,20 +142,20 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                   
                   await new Promise(async (resolve, reject) => {
                     raffle.once("WinnerPicked", async () => { // event listener for WinnerPicked
-                        console.log("WinnerPicked event fired!")
+                        console.log("WinnerPicked event fired!");
                         // assert throws an error if it fails, so we need to wrap
                         // it in a try/catch so that the promise returns event
                         // if it fails.
                         try {
                             // Now lets get the ending values...
-                            const recentWinner = await raffle.getRecentWinner()
-                            const raffleState = await raffle.getRaffleState()
-                            const winnerBalance = await accounts[2].getBalance()
-                            const endingTimeStamp = await raffle.getLastTimeStamp()
-                            await expect(raffle.getPlayer(0)).to.be.reverted
+                            const recentWinner = await raffle.getRecentWinner();
+                            const raffleState = await raffle.getRaffleState();
+                            const winnerBalance = await accounts[2].getBalance();
+                            const endingTimeStamp = await raffle.getLastTimeStamp();
+                            await expect(raffle.getPlayer(0)).to.be.reverted;
                             // Comparisons to check if our ending values are correct:
-                            assert.equal(recentWinner.toString(), accounts[2].address)
-                            assert.equal(raffleState, 0)
+                            assert.equal(recentWinner.toString(), accounts[2].address);
+                            assert.equal(raffleState, 0);
                             assert.equal(
                                 winnerBalance.toString(), 
                                 startingBalance // startingBalance + ( (raffleEntranceFee * additionalEntrances) + raffleEntranceFee )
@@ -165,15 +165,26 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                                             .add(raffleEntranceFee)
                                     )
                                     .toString()
-                            )
-                            assert(endingTimeStamp > startingTimeStamp)
-                            resolve() // if try passes, resolves the promise 
+                            );
+                            assert(endingTimeStamp > startingTimeStamp);
+                            resolve(); // if try passes, resolves the promise 
                         } catch (e) { 
-                            reject(e) // if try fails, rejects the promise
+                            reject(e); // if try fails, rejects the promise
                         }
-                    })
-                  });
+                    });
+                    // kicking off the event by mocking the chainlink keepers and vrf coordinator
+                    try {
+                        const tx = await raffle.performUpkeep("0x");
+                        const txReceipt = await tx.wait(1);
+                        startingBalance = await accounts[2].getBalance();
+                        await vrfCoordinatorV2Mock.fulfillRandomWords(
+                            txReceipt.events[1].args.requestId,
+                            raffle.address
+                        );
+                      } catch (e) {
+                          reject(e);
+                    }
+                });
             });
         });
-
     }); //15:52:11
