@@ -129,8 +129,51 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                     vrfCoordinatorV2Mock.fulfillRandomWords(1, raffle.target) // reverts if not fulfilled
                 ).to.be.revertedWith("nonexistent request");
             });
+            // This test simulates users entering the raffle and wraps the entire functionality of the raffle
+            it("picks a winner, resets, and sends money", async () => {
+                const additionalEntrances = 3; // to test
+                  const startingIndex = 2;
+                  let startingBalance;
+                  for (let i = startingIndex; i < startingIndex + additionalEntrances; i++) { // i = 2; i < 5; i=i+1
+                      raffle = raffleContract.connect(accounts[i]); // Returns a new instance of the Raffle contract connected to player
+                      await raffle.enterRaffle({ value: raffleEntranceFee });
+                  }
+                  const startingTimeStamp = await raffle.getLastTimeStamp(); // stores starting timestamp (before we fire our event)
+                  
+                  await new Promise(async (resolve, reject) => {
+                    raffle.once("WinnerPicked", async () => { // event listener for WinnerPicked
+                        console.log("WinnerPicked event fired!")
+                        // assert throws an error if it fails, so we need to wrap
+                        // it in a try/catch so that the promise returns event
+                        // if it fails.
+                        try {
+                            // Now lets get the ending values...
+                            const recentWinner = await raffle.getRecentWinner()
+                            const raffleState = await raffle.getRaffleState()
+                            const winnerBalance = await accounts[2].getBalance()
+                            const endingTimeStamp = await raffle.getLastTimeStamp()
+                            await expect(raffle.getPlayer(0)).to.be.reverted
+                            // Comparisons to check if our ending values are correct:
+                            assert.equal(recentWinner.toString(), accounts[2].address)
+                            assert.equal(raffleState, 0)
+                            assert.equal(
+                                winnerBalance.toString(), 
+                                startingBalance // startingBalance + ( (raffleEntranceFee * additionalEntrances) + raffleEntranceFee )
+                                    .add(
+                                        raffleEntranceFee
+                                            .mul(additionalEntrances)
+                                            .add(raffleEntranceFee)
+                                    )
+                                    .toString()
+                            )
+                            assert(endingTimeStamp > startingTimeStamp)
+                            resolve() // if try passes, resolves the promise 
+                        } catch (e) { 
+                            reject(e) // if try fails, rejects the promise
+                        }
+                    })
+                  });
+            });
         });
-
-        
 
     }); //15:52:11
