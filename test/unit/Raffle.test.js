@@ -9,6 +9,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
 
         beforeEach(async function () {
             accounts = await ethers.getSigners(); // could also do with getNamedAccounts
+            
             deployer = (await getNamedAccounts()).deployer;
             player = accounts[1];
             await deployments.fixture(["all"]);
@@ -131,6 +132,7 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
             });
             // This test simulates users entering the raffle and wraps the entire functionality of the raffle
             it("picks a winner, resets, and sends money", async () => {
+                const provider = ethers.getDefaultProvider();
                 const additionalEntrances = 3; // to test
                   const startingIndex = 2;
                   let startingBalance;
@@ -150,9 +152,11 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                             // Now lets get the ending values...
                             const recentWinner = await raffle.getRecentWinner();
                             const raffleState = await raffle.getRaffleState();
-                            const winnerBalance = await accounts[2].provider.getBalance(accounts.address);
+                            
+                            const winnerBalance = await provider.getBalance(accounts[2].address);
                             const endingTimeStamp = await raffle.getLastTimeStamp();
                             await expect(raffle.getPlayer(0)).to.be.reverted;
+
                             // Comparisons to check if our ending values are correct:
                             assert.equal(recentWinner.toString(), accounts[2].address);
                             assert.equal(raffleState, 0);
@@ -176,10 +180,11 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                     try {
                         const tx = await raffle.performUpkeep("0x");
                         const txReceipt = await tx.wait(1);
-                        startingBalance = await accounts[2].provider.getBalance(accounts.address);
+                        startingBalance = await provider.getBalance(accounts[2].address);
+                        console.log(txReceipt.events);
                         await vrfCoordinatorV2Mock.fulfillRandomWords(
-                            txReceipt.events[1].args.requestId,
-                            raffle.address
+                            txReceipt.logs[1].args.requestId,
+                            raffle.target
                         );
                       } catch (e) {
                           reject(e);
@@ -187,6 +192,4 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                 });
             });
         });
-
-        
     }); //16:05:35
