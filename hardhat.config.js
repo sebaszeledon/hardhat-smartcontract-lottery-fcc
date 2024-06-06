@@ -49,6 +49,7 @@ module.exports = {
         accounts: [PRIVATE_KEY],
         chainId: 11155111,
         blockConfirmations: 2,
+        saveDeployments: true,
     },
   },
   gasReporter: {
@@ -58,8 +59,25 @@ module.exports = {
     noColors: true,
     // coinmarketcap: process.env.COINMARKETCAP_API_KEY,
   },
+  etherscan: {
+    // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>
+    apiKey: {
+        sepolia: ETHERSCAN_API_KEY,
+        //polygon: POLYGONSCAN_API_KEY,
+    },
+    customChains: [
+        {
+            network: "goerli",
+            chainId: 5,
+            urls: {
+                apiURL: "https://api-goerli.etherscan.io/api",
+                browserURL: "https://goerli.etherscan.io",
+            },
+        },
+    ],
+  },
   mocha: {
-    timeout: 200000, // 200 seconds max for running tests
+    timeout: 500000, // 500 seconds max for running tests
   },
 };
 
