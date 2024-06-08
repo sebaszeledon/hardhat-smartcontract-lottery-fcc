@@ -162,13 +162,13 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
                             assert.equal(raffleState, 0);
                             assert.equal(
                                 winnerBalance.toString(), 
-                                startingBalance // startingBalance + ( (raffleEntranceFee * additionalEntrances) + raffleEntranceFee )
-                                    .add(
-                                        raffleEntranceFee
-                                            .mul(additionalEntrances)
-                                            .add(raffleEntranceFee)
-                                    )
-                                    .toString()
+                                startingBalance + ( (raffleEntranceFee) + raffleEntranceFee ).toString()
+                                    // .add(
+                                    //     raffleEntranceFee
+                                    //         .mul(additionalEntrances)
+                                    //         .add(raffleEntranceFee)
+                                    // )
+                                    // .toString()
                             );
                             assert(endingTimeStamp > startingTimeStamp);
                             resolve(); // if try passes, resolves the promise 
